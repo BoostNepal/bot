@@ -460,9 +460,16 @@
         }
 
         function sendToWhatsApp() {
-            const text = `Boost Nepal Order: Platform - ${state.platform}, Boost - ${state.boost}, Quantity - ${state.quantity}, Total - ${state.total} NPR`;
-            const waLink = `https://wa.me/9779826660865?text=${encodeURIComponent(text)}`;
-            window.open(waLink, '_blank');
+    const text = `🌟 *Boost Nepal Order* 🌟
+    
+    *Platform*: ${state.platform}
+    *Boost*: ${state.boost}
+    *Quantity*: ${state.quantity}
+    *Total*: ${state.total} NPR
+
+    Send me the *QR Code* to pay Rs.${state.total}🙌`;
+    const waLink = `https://wa.me/9779826660865?text=${encodeURIComponent(text)}`;
+    window.open(waLink, '_blank');
         }
 
         // Start conversation
