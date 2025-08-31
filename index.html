@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Boost Nepal</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e1b4b, #3b2f7a, #2a2a6a);
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+        .chat-container {
+            width: 90%;
+            max-width: 600px;
+            height: 80vh;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
+            display: flex;
+            flex-direction: column;
+        }
+        .chat-header {
+            background: rgba(0, 0, 0, 0.6);
+            padding: 15px;
+            text-align: center;
+            font-size: clamp(1.1em, 4vw, 1.3em);
+            font-weight: 600;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+        .message {
+            max-width: 80%;
+            margin-bottom: 15px;
+            padding: 12px 18px;
+            border-radius: 20px;
+            animation: fadeIn 0.3s ease;
+        }
+        .ai-message {
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            align-self: flex-start;
+            border-bottom-left-radius: 5px;
+        }
+        .user-message {
+            background: linear-gradient(135deg, #22d3ee, #06b6d4);
+            align-self: flex-end;
+            border-bottom-right-radius: 5px;
+            color: #000;
+        }
+        .options {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: flex-start;
+            gap: 10px;
+        }
+        .option-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: clamp(0.8em, 3vw, 0.9em);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        .option-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.4s ease, height 0.4s ease;
+        }
+        .option-btn:hover::before {
+            width: 200px;
+            height: 200px;
+        }
+        .option-btn:hover {
+            transform: scale(1.1);
+            background: rgba(255, 255, 255, 0.4);
+        }
+        .input-area {
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            gap: 10px;
+        }
+        input[type="number"] {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 30px;
+            background: rgba(255, 255, 255, 0.2);
+            color: #fff;
+            font-size: clamp(0.9em, 3vw, 1em);
+        }
+        button.submit-btn, button.continue-btn {
+            background: linear-gradient(135deg, #ff6b6b, #ff8e53);
+            border: none;
+            color: #000;
+            padding: 10px 20px;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: clamp(0.8em, 3vw, 0.9em);
+        }
+        button.submit-btn:hover, button.continue-btn:hover {
+            transform: scale(1.05);
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes dropOut {
+            from { opacity: 1; transform: translateY(0); }
+            to { opacity: 0; transform: translateY(100px); }
+        }
+        .drop-out {
+            animation: dropOut 0.5s ease forwards;
+        }
+        .typing::after {
+            content: '|';
+            animation: blink 0.7s infinite;
+        }
+        @keyframes blink {
+            50% { opacity: 0; }
+        }
+        @media (max-width: 768px) {
+            .chat-container {
+                width: 95%;
+                height: 90vh;
+            }
+            .chat-header {
+                font-size: clamp(1em, 3.5vw, 1.2em);
+            }
+            .message {
+                max-width: 85%;
+                padding: 10px 15px;
+            }
+            .option-btn, input[type="number"], button.submit-btn, button.continue-btn {
+                font-size: clamp(0.7em, 2.5vw, 0.8em);
+            }
+        }
+        @media (max-width: 480px) {
+            .chat-container {
+                width: 98%;
+                height: 95vh;
+            }
+            .chat-messages {
+                padding: 10px;
+            }
+            .message {
+                max-width: 90%;
+                padding: 8px 12px;
+            }
+            .input-area {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">Boost Nepal - Social Media Growth</div>
+        <div class="chat-messages" id="chat-messages"></div>
+        <div class="input-area" id="input-area"></div>
+    </div>
+
+    <script>
+        const chatMessages = document.getElementById('chat-messages');
+        const inputArea = document.getElementById('input-area');
+
+        const platforms = ['TikTok', 'Instagram', 'YouTube', 'Facebook'];
+        const boostTypes = {
+            default: ['followers', 'likes', 'views'],
+            YouTube: ['subscribers']
+        };
+
+        const phrases = {
+            platform: [
+                'Hey! Which platform do you want to grow?',
+                'Hi! Pick a social media to boost.',
+                'Hello! Choose a platform to enhance.'
+            ],
+            boost: [
+                'Great! What do you want to increase?',
+                'Nice! What would you like to grow?',
+                'Cool! Select what to boost:'
+            ],
+            quantity: [
+                'Awesome! How many do you want?',
+                'Good choice! How many would you like?',
+                'Perfect! Enter the amount:'
+            ],
+            minQuantity: [
+                'Please enter at least {min} to continue.',
+                'You need at least {min} to proceed.',
+                'Set a minimum of {min} to move forward.'
+            ],
+            total: [
+                'Your boost costs {total} NPR. Ready to go?',
+                'Total price is {total} NPR. All set to boost?',
+                'It’ll be {total} NPR. Ready to proceed?'
+            ],
+            change: [
+                'Want to change anything?',
+                'Need to tweak your choices?',
+                'Would you like to modify your selection?'
+            ]
+        };
+
+        const prices = {
+            followers: 600 / 1000, // NPR per follower
+            likes: 100 / 1000,     // NPR per like
+            views: 5 / 2000,       // NPR per view
+            subscribers: 600 / 1000 // NPR per subscriber (same as followers)
+        };
+
+        const minQuantities = {
+            followers: 100,
+            likes: 100,
+            views: 5000,
+            subscribers: 100
+        };
+
+        let state = {
+            platform: null,
+            boost: null,
+            quantity: null,
+            total: 0
+        };
+
+        function getRandomPhrase(key, params = {}) {
+            const arr = phrases[key];
+            let phrase = arr[Math.floor(Math.random() * arr.length)];
+            for (const [key, value] of Object.entries(params)) {
+                phrase = phrase.replace(`{${key}}`, value);
+            }
+            return phrase;
+        }
+
+        function appendMessage(text, type) {
+            const msg = document.createElement('div');
+            msg.classList.add('message', type);
+            msg.innerHTML = text;
+            chatMessages.appendChild(msg);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function typeMessage(text, callback) {
+            const msg = document.createElement('div');
+            msg.classList.add('message', 'ai-message', 'typing');
+            chatMessages.appendChild(msg);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            let i = 0;
+            const typing = setInterval(() => {
+                if (i < text.length) {
+                    msg.innerHTML += text.charAt(i);
+                    i++;
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                } else {
+                    clearInterval(typing);
+                    msg.classList.remove('typing');
+                    if (callback) callback();
+                }
+            }, 50);
+        }
+
+        function showOptions(options, callback) {
+            inputArea.innerHTML = '';
+            options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.classList.add('option-btn');
+                btn.textContent = opt;
+                btn.onclick = () => {
+                    appendMessage(opt, 'user-message');
+                    callback(opt);
+                };
+                inputArea.appendChild(btn);
+            });
+        }
+
+        function showQuantityInput(callback) {
+            inputArea.innerHTML = '';
+            const input = document.createElement('input');
+            input.type = 'number';
+            input.min = '1';
+            input.placeholder = 'Enter quantity';
+            inputArea.appendChild(input);
+
+            const submit = document.createElement('button');
+            submit.classList.add('submit-btn');
+            submit.textContent = 'Submit';
+            submit.onclick = () => {
+                const qty = parseInt(input.value);
+                if (qty >= minQuantities[state.boost]) {
+                    appendMessage(qty, 'user-message');
+                    callback(qty);
+                } else {
+                    typeMessage(getRandomPhrase('minQuantity', { min: minQuantities[state.boost] }), () => {
+                        showQuantityInput(callback);
+                    });
+                }
+            };
+            inputArea.appendChild(submit);
+        }
+
+        function calculateTotal() {
+            const base = prices[state.boost];
+            state.total = Math.round(state.quantity * base);
+            typeMessage(getRandomPhrase('total', { total: state.total }), showReadyPrompt);
+        }
+
+        function showReadyPrompt() {
+            showOptions(['Yes', 'No'], (response) => {
+                if (response === 'Yes') {
+                    typeMessage("Ok, let's place your order now!", () => {
+                        inputArea.innerHTML = '';
+                        const continueBtn = document.createElement('button');
+                        continueBtn.classList.add('continue-btn');
+                        continueBtn.textContent = 'Click to Continue';
+                        continueBtn.onclick = () => {
+                            appendMessage('Continue', 'user-message');
+                            sendToWhatsApp();
+                        };
+                        inputArea.appendChild(continueBtn);
+                    });
+                } else {
+                    typeMessage(getRandomPhrase('change'), showChangePrompt);
+                }
+            });
+        }
+
+        function showChangePrompt() {
+            showOptions(['Yes', 'No'], (response) => {
+                if (response === 'Yes') {
+                    typeMessage("Ok, let's restart!", () => {
+                        const messages = chatMessages.children;
+                        for (let i = messages.length - 1; i >= 0; i--) {
+                            messages[i].classList.add('drop-out');
+                            setTimeout(() => messages[i].remove(), 500);
+                        }
+                        setTimeout(startChat, 600);
+                    });
+                } else {
+                    typeMessage("So, let's continue!", () => {
+                        inputArea.innerHTML = '';
+                        const continueBtn = document.createElement('button');
+                        continueBtn.classList.add('continue-btn');
+                        continueBtn.textContent = 'Click to Continue';
+                        continueBtn.onclick = () => {
+                            appendMessage('Continue', 'user-message');
+                            sendToWhatsApp();
+                        };
+                        inputArea.appendChild(continueBtn);
+                    });
+                }
+            });
+        }
+
+        function sendToWhatsApp() {
+            const text = `Boost Nepal Order: Platform - ${state.platform}, Boost - ${state.boost}, Quantity - ${state.quantity}, Total - ${state.total} NPR`;
+            const waLink = `https://wa.me/9779826660865?text=${encodeURIComponent(text)}`;
+            window.open(waLink, '_blank');
+        }
+
+        // Start conversation
+        function startChat() {
+            state = { platform: null, boost: null, quantity: null, total: 0 };
+            inputArea.innerHTML = '';
+            typeMessage(getRandomPhrase('platform'), () => {
+                showOptions(platforms, (plat) => {
+                    state.platform = plat;
+                    typeMessage(getRandomPhrase('boost'), () => {
+                        const boosts = plat === 'YouTube' ? boostTypes.YouTube : boostTypes.default;
+                        showOptions(boosts, (bst) => {
+                            state.boost = bst;
+                            typeMessage(getRandomPhrase('quantity'), () => {
+                                showQuantityInput((qty) => {
+                                    state.quantity = qty;
+                                    calculateTotal();
+                                });
+                            });
+                        });
+                    });
+                });
+            });
+        }
+
+        startChat();
+    </script>
+</body>
+  </html>
