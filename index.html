@@ -19,6 +19,7 @@
             align-items: center;
             min-height: 100vh;
             overflow: hidden;
+            padding: 80px 100px; /* Increased top/bottom space to 80px, left/right to 100px */
         }
         .chat-container {
             width: 90%;
@@ -51,7 +52,7 @@
             margin-bottom: 15px;
             padding: 12px 18px;
             border-radius: 20px;
-            animation: fadeIn 0.3s ease;
+            animation: slideIn 0.5s ease;
         }
         .ai-message {
             background: linear-gradient(135deg, #4f46e5, #7c3aed);
@@ -80,7 +81,9 @@
             font-size: clamp(0.8em, 3vw, 0.9em);
             position: relative;
             overflow: hidden;
+            animation: float 2s ease-in-out infinite;
             transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(0, 255, 255, 0.2);
         }
         .option-btn::before {
             content: '';
@@ -107,6 +110,8 @@
             background: rgba(0, 0, 0, 0.5);
             display: flex;
             gap: 10px;
+            position: relative;
+            z-index: 10;
         }
         input[type="number"] {
             flex: 1;
@@ -116,6 +121,20 @@
             background: rgba(255, 255, 255, 0.2);
             color: #fff;
             font-size: clamp(0.9em, 3vw, 1em);
+            animation: floatInput 2s ease-in-out infinite;
+            box-shadow: 0 4px 10px rgba(0, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+        input[type="number"]:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 0.3);
+        }
+        input[type="number"]::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+            transition: opacity 0.3s ease;
+        }
+        input[type="number"]:focus::placeholder {
+            opacity: 0;
         }
         button.submit-btn, button.continue-btn {
             background: linear-gradient(135deg, #ff6b6b, #ff8e53);
@@ -124,22 +143,32 @@
             padding: 10px 20px;
             border-radius: 30px;
             cursor: pointer;
-            transition: all 0.3s;
             font-size: clamp(0.8em, 3vw, 0.9em);
+            animation: float 2s ease-in-out infinite;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(0, 255, 255, 0.2);
         }
         button.submit-btn:hover, button.continue-btn:hover {
             transform: scale(1.05);
         }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+        @keyframes floatInput {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-3px); }
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
         }
         @keyframes dropOut {
             from { opacity: 1; transform: translateY(0); }
-            to { opacity: 0; transform: translateY(100px); }
+            to { opacity: 0; transform: translateY(100px) rotate(5deg); }
         }
         .drop-out {
-            animation: dropOut 0.5s ease forwards;
+            animation: dropOut 0.6s ease forwards;
         }
         .typing::after {
             content: '|';
@@ -149,6 +178,9 @@
             50% { opacity: 0; }
         }
         @media (max-width: 768px) {
+            body {
+                padding: 60px 40px; /* Adjusted for smaller screens */
+            }
             .chat-container {
                 width: 95%;
                 height: 90vh;
@@ -165,6 +197,9 @@
             }
         }
         @media (max-width: 480px) {
+            body {
+                padding: 40px 20px; /* Further adjusted for very small screens */
+            }
             .chat-container {
                 width: 98%;
                 height: 95vh;
@@ -201,34 +236,34 @@
 
         const phrases = {
             platform: [
-                'Hey! Which platform do you want to grow?',
-                'Hi! Pick a social media to boost.',
-                'Hello! Choose a platform to enhance.'
+                'Hey! Which social platform do you want to grow?',
+                'Hi! Pick a platform to boost today.',
+                'Hello! Choose a social media to enhance.'
             ],
             boost: [
-                'Great! What do you want to increase?',
-                'Nice! What would you like to grow?',
-                'Cool! Select what to boost:'
+                'Nice! What do you want to grow?',
+                'Great! What would you like to boost?',
+                'Cool! Pick what to increase:'
             ],
             quantity: [
-                'Awesome! How many do you want?',
-                'Good choice! How many would you like?',
-                'Perfect! Enter the amount:'
+                'Awesome! How many do you need?',
+                'Good choice! Enter the amount:',
+                'Perfect! How many would you like?'
             ],
             minQuantity: [
                 'Please enter at least {min} to continue.',
-                'You need at least {min} to proceed.',
-                'Set a minimum of {min} to move forward.'
+                'You need at least {min} to move forward.',
+                'Set a minimum of {min} to proceed.'
             ],
             total: [
-                'Your boost costs {total} NPR. Ready to go?',
-                'Total price is {total} NPR. All set to boost?',
-                'It’ll be {total} NPR. Ready to proceed?'
+                'Your boost will cost {total} NPR. Ready to go?',
+                'Total is {total} NPR. All set to boost?',
+                'It’s {total} NPR. Ready to proceed?'
             ],
             change: [
-                'Want to change anything?',
-                'Need to tweak your choices?',
-                'Would you like to modify your selection?'
+                'Want to change your choices?',
+                'Need to tweak anything?',
+                'Would you like to adjust your selection?'
             ]
         };
 
@@ -292,10 +327,11 @@
 
         function showOptions(options, callback) {
             inputArea.innerHTML = '';
-            options.forEach(opt => {
+            options.forEach((opt, index) => {
                 const btn = document.createElement('button');
                 btn.classList.add('option-btn');
                 btn.textContent = opt;
+                btn.style.animationDelay = `${index * 0.1}s`;
                 btn.onclick = () => {
                     appendMessage(opt, 'user-message');
                     callback(opt);
@@ -309,7 +345,22 @@
             const input = document.createElement('input');
             input.type = 'number';
             input.min = '1';
-            input.placeholder = 'Enter quantity';
+            input.placeholder = `Enter at least ${minQuantities[state.boost]}`;
+            input.style.zIndex = '10';
+            input.onkeydown = (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const qty = parseInt(input.value);
+                    if (qty >= minQuantities[state.boost]) {
+                        appendMessage(qty, 'user-message');
+                        callback(qty);
+                    } else {
+                        typeMessage(getRandomPhrase('minQuantity', { min: minQuantities[state.boost] }), () => {
+                            showQuantityInput(callback);
+                        });
+                    }
+                }
+            };
             inputArea.appendChild(input);
 
             const submit = document.createElement('button');
@@ -362,9 +413,9 @@
                         const messages = chatMessages.children;
                         for (let i = messages.length - 1; i >= 0; i--) {
                             messages[i].classList.add('drop-out');
-                            setTimeout(() => messages[i].remove(), 500);
+                            setTimeout(() => messages[i].remove(), 600);
                         }
-                        setTimeout(startChat, 600);
+                        setTimeout(startChat, 700);
                     });
                 } else {
                     typeMessage("So, let's continue!", () => {
@@ -414,4 +465,4 @@
         startChat();
     </script>
 </body>
-  </html>
+</html>
